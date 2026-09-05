@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   useEffect, useRef, useState, useCallback
 } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,10 @@ import {
 } from 'lucide-react';
 import { AnimatedCounter } from '../components/ui/Progress';
 import { cn } from '../lib/utils';
+import { useApp } from '../context/AppContext';
+import type { UserRole } from '../types';
+import { RoleAuthModal } from '../components/ui/RoleAuthModal';
+import type { EcoRoleKey } from '../components/ui/RoleAuthModal';
 
 // â”€â”€â”€ Theme System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -45,6 +49,8 @@ type RoleKey = 'citizen' | 'government' | 'university' | 'faculty' | 'company';
 
 const ROLES: {
   key: RoleKey;
+  /** Maps to the app's UserRole used by authService.login() */
+  appRole: UserRole;
   label: string;
   icon: React.ElementType;
   desc: string;
@@ -56,7 +62,7 @@ const ROLES: {
   capabilities: string[];
 }[] = [
   {
-    key: 'citizen', label: 'Citizen', icon: Users,
+    key: 'citizen', appRole: 'citizen', label: 'Citizen', icon: Users,
     desc: 'Submit community problems and track their resolution journey',
     color: '#22c55e', accent: 'rgba(34,197,94,0.15)',
     route: '/citizen/dashboard',
@@ -64,7 +70,7 @@ const ROLES: {
     capabilities: ['Submit problems', 'Track progress', 'View solutions', 'Receive updates'],
   },
   {
-    key: 'government', label: 'Government', icon: ShieldCheck,
+    key: 'government', appRole: 'government', label: 'Government', icon: ShieldCheck,
     desc: 'Verify problems, allocate universities, and monitor impact',
     color: '#3b82f6', accent: 'rgba(59,130,246,0.15)',
     route: '/government/dashboard',
@@ -72,7 +78,7 @@ const ROLES: {
     capabilities: ['Verify problems', 'AI matching', 'Allocate universities', 'Analytics', 'Audit logs'],
   },
   {
-    key: 'university', label: 'University', icon: Building2,
+    key: 'university', appRole: 'university', label: 'University', icon: Building2,
     desc: 'Browse and accept problems, manage faculty and student teams',
     color: '#0ea5e9', accent: 'rgba(14,165,233,0.15)',
     route: '/university/dashboard',
@@ -80,7 +86,7 @@ const ROLES: {
     capabilities: ['Problem marketplace', 'Team formation', 'Faculty management'],
   },
   {
-    key: 'faculty', label: 'Faculty', icon: BookOpen,
+    key: 'faculty', appRole: 'faculty', label: 'Faculty', icon: BookOpen,
     desc: 'Guide student teams through research, prototyping, and deployment',
     color: '#a855f7', accent: 'rgba(168,85,247,0.15)',
     route: '/faculty/dashboard',
@@ -88,7 +94,7 @@ const ROLES: {
     capabilities: ['Project lifecycle', '8-phase milestones', 'Student oversight'],
   },
   {
-    key: 'company', label: 'Company', icon: Handshake,
+    key: 'company', appRole: 'industry', label: 'Company', icon: Handshake,
     desc: 'Discover projects, offer mentorship, funding, and deployment support',
     color: '#f59e0b', accent: 'rgba(245,158,11,0.15)',
     route: '/industry/dashboard',
@@ -737,6 +743,7 @@ function EcosystemOrbit({ onRoleClick }: { onRoleClick: (k: RoleKey) => void }) 
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { login } = useApp();
   const [theme, setThemeState] = useState<Theme>(getStoredTheme);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -744,6 +751,8 @@ export default function Landing() {
   const [activeSection, setActiveSection] = useState('');
   const [modal, setModal] = useState<ModalPayload | null>(null);
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  /** Role that was clicked in the Ecosystem orbit — null means the auth modal is closed */
+  const [authModalRole, setAuthModalRole] = useState<EcoRoleKey | null>(null);
 
   useEffect(() => { injectCSS(); }, []);
 
@@ -781,6 +790,15 @@ export default function Landing() {
   const openLogin = useCallback((role: RoleKey) => { setModal({ type: 'login', role }); setMenuOpen(false); }, []);
   const openStat = useCallback((statId: string) => { setModal({ type: 'stat', statId }); }, []);
   const closeModal = useCallback(() => setModal(null), []);
+
+  /**
+   * Opens the RoleAuthModal pre-selected to the given ecosystem role.
+   * The modal handles login/register, role switching, and final navigation.
+   */
+  const openAuthModal = useCallback((key: EcoRoleKey) => {
+    setAuthModalRole(key);
+    setMenuOpen(false);
+  }, []);
   const changeTheme = useCallback((t: Theme) => { setThemeState(t); applyTheme(t); }, []);
 
   const scrollTo = useCallback((id: string) => {
@@ -980,14 +998,14 @@ export default function Landing() {
             </p>
           </SR>
           <SR delay={.12}>
-            <EcosystemOrbit onRoleClick={openLogin} />
+            <EcosystemOrbit onRoleClick={openAuthModal} />
           </SR>
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {ROLES.map((r, i) => {
               const Icon = r.icon;
               return (
                 <SR key={r.key} delay={.05 * i}>
-                  <button onClick={() => openLogin(r.key)}
+                  <button onClick={() => openAuthModal(r.key)}
                     className="jih-card w-full p-3 flex flex-col items-center gap-2 text-center"
                     aria-label={`Open ${r.label} portal`}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -1277,6 +1295,16 @@ export default function Landing() {
         {modal && (
           <JIHModal key={modal.type + (modal.type === 'login' ? modal.role : modal.statId)}
             payload={modal} onClose={closeModal} onNavigate={navigate} />
+        )}
+      </AnimatePresence>
+      {/* ── ROLE AUTH MODAL (Ecosystem node clicks) ── */}
+      <AnimatePresence>
+        {authModalRole && (
+          <RoleAuthModal
+            key={authModalRole}
+            initialRole={authModalRole}
+            onClose={() => setAuthModalRole(null)}
+          />
         )}
       </AnimatePresence>
     </div>

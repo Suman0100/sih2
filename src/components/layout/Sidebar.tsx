@@ -174,7 +174,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="border-t border-surface-100 p-2 space-y-0.5 shrink-0">
         <button
           onClick={handleLogout}
-          title={collapsed ? 'Switch Role' : undefined}
+          title={collapsed ? 'Logout' : undefined}
           className={cn(
             'w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium',
             'text-surface-500 hover:bg-danger-50 hover:text-danger-600 transition-colors duration-150',
@@ -189,7 +189,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 transition={{ duration: 0.15 }}
                 className="overflow-hidden whitespace-nowrap"
               >
-                Switch Role
+                Logout
               </motion.span>
             )}
           </AnimatePresence>

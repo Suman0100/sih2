@@ -1210,9 +1210,6 @@ export default function Landing() {
                     className="jih-btn-pri px-6 py-3 text-sm font-semibold flex items-center gap-2">
                     Launch Demo <ArrowRight size={15} />
                   </button>
-                  <button onClick={() => navigate('/demo')} className="jih-btn-ghost px-6 py-3 text-sm">
-                    All Portals
-                  </button>
                 </div>
               </div>
             </div>

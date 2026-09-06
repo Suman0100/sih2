@@ -7,7 +7,6 @@ import { Skeleton } from '../components/ui/Card';
 
 // Eagerly loaded
 import Landing from '../pages/Landing';
-import DemoLogin from '../pages/DemoLogin';
 
 // Lazy-loaded role pages
 const CitizenDashboard   = lazy(() => import('../pages/citizen/Dashboard'));
@@ -75,13 +74,13 @@ function LoadingFallback() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
-  if (!user) return <Navigate to="/demo" replace />;
-  return <>{children}</>;
+  if (!user) return <Navigate to="/" replace />;
+  return <>{children}</>;  
 }
 
 function RequireRole({ role, children }: { role: string; children: React.ReactNode }) {
   const { user } = useApp();
-  if (!user) return <Navigate to="/demo" replace />;
+  if (!user) return <Navigate to="/" replace />;
   if (user.role !== role) return <Navigate to={`/${user.role}/dashboard`} replace />;
   return <>{children}</>;
 }
@@ -95,7 +94,6 @@ export function AppRouter() {
         <Routes location={location} key={location.pathname}>
           {/* Public */}
           <Route path="/" element={<Landing />} />
-          <Route path="/demo" element={<DemoLogin />} />
 
           {/* Protected App Shell */}
           <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
@@ -157,7 +155,7 @@ export function AppRouter() {
             <Route path="/industry/analytics"     element={<RequireRole role="industry"><IndustryAnalytics /></RequireRole>} />
 
             {/* Default redirect */}
-            <Route path="*" element={<Navigate to="/demo" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </Suspense>
